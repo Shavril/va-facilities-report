@@ -1,0 +1,14 @@
+{
+  "data": {
+    "serviceInfo": {
+      "name": "Cardiology",
+      "serviceId": "cardiology",
+      "serviceType": "health"
+    },
+    "waitTime": {
+      "new": 253,
+      "established": 10,
+      "effectiveDate": "2026-11-05"
+    }
+  }
+}

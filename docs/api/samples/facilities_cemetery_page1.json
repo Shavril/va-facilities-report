@@ -1,0 +1,165 @@
+{
+  "data": [
+    {
+      "id": "nca_042",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Baxter Springs City Soldiers' Lot",
+        "facilityType": "va_cemetery",
+        "classification": "Soldiers' Lot",
+        "website": "https://www.cem.va.gov/cems/lots/BaxterSprings.asp",
+        "lat": 37.032057500000064,
+        "long": -94.77066049999996,
+        "timeZone": "America/Chicago",
+        "address": {
+          "mailing": {
+            "zip": "66048",
+            "city": "Leavenworth",
+            "state": "KS",
+            "address1": "150 Muncie Road"
+          },
+          "physical": {
+            "zip": "66713",
+            "city": "Baxter Springs",
+            "state": "KS",
+            "address1": "166 West Avenue"
+          }
+        },
+        "phone": {
+          "fax": "913-727-1905",
+          "main": "913-727-1376"
+        },
+        "hours": {
+          "monday": "Sunrise - Sunset",
+          "tuesday": "Sunrise - Sunset",
+          "wednesday": "Sunrise - Sunset",
+          "thursday": "Sunrise - Sunset",
+          "friday": "Sunrise - Sunset",
+          "saturday": "Sunrise - Sunset",
+          "sunday": "Sunrise - Sunset"
+        },
+        "operatingStatus": {
+          "code": "NORMAL",
+          "supplementalStatus": [
+            {
+              "id": "BURIALS_CLOSED",
+              "label": "Burial space not available"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "nca_054",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Congressional Cemetery Government Lots",
+        "facilityType": "va_cemetery",
+        "classification": "Government Lots",
+        "website": "https://www.cem.va.gov/cems/lots/Congressional.asp",
+        "lat": 38.88278,
+        "long": -76.97901,
+        "timeZone": "America/New_York",
+        "address": {
+          "mailing": {
+            "zip": "21228",
+            "city": "Baltimore",
+            "state": "MD",
+            "address1": "5501 Frederick Ave"
+          },
+          "physical": {
+            "zip": "20003",
+            "city": "Washington",
+            "state": "DC",
+            "address1": "1801 E Street Southeast"
+          }
+        },
+        "phone": {
+          "fax": "410-644-1563",
+          "main": "410-644-9696"
+        },
+        "hours": {
+          "monday": "Sunrise - Sunset",
+          "tuesday": "Sunrise - Sunset",
+          "wednesday": "Sunrise - Sunset",
+          "thursday": "Sunrise - Sunset",
+          "friday": "Sunrise - Sunset",
+          "saturday": "Sunrise - Sunset",
+          "sunday": "Sunrise - Sunset"
+        },
+        "operatingStatus": {
+          "code": "NORMAL",
+          "supplementalStatus": [
+            {
+              "id": "BURIALS_CLOSED",
+              "label": "Burial space not available"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "nca_055",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Evergreen Cemetery Soldiers' Lot",
+        "facilityType": "va_cemetery",
+        "classification": "Soldiers' Lot",
+        "website": "https://www.cem.va.gov/cems/lots/Evergreen.asp",
+        "lat": 39.06965130000003,
+        "long": -84.46885409999999,
+        "timeZone": "America/New_York",
+        "address": {
+          "mailing": {
+            "zip": "40356",
+            "city": "Nicholasville",
+            "state": "KY",
+            "address1": "6980 Danville Road"
+          },
+          "physical": {
+            "zip": "41071",
+            "city": "Southgate",
+            "state": "KY",
+            "address1": "25 Alexandria Pike"
+          }
+        },
+        "phone": {
+          "fax": "859-887-4860",
+          "main": "859-885-5727"
+        },
+        "hours": {
+          "monday": "Sunrise - Sunset",
+          "tuesday": "Sunrise - Sunset",
+          "wednesday": "Sunrise - Sunset",
+          "thursday": "Sunrise - Sunset",
+          "friday": "Sunrise - Sunset",
+          "saturday": "Sunrise - Sunset",
+          "sunday": "Sunrise - Sunset"
+        },
+        "operatingStatus": {
+          "code": "NORMAL",
+          "supplementalStatus": [
+            {
+              "id": "BURIALS_CLOSED",
+              "label": "Burial space not available"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "links": {
+    "self": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=cemetery&page=1&per_page=200",
+    "first": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=cemetery&page=1&per_page=200",
+    "next": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=cemetery&page=2&per_page=200",
+    "last": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=cemetery&page=2&per_page=200"
+  },
+  "meta": {
+    "pagination": {
+      "currentPage": 1,
+      "perPage": 200,
+      "totalPages": 2,
+      "totalEntries": 333
+    }
+  }
+}

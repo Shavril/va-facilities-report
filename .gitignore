@@ -1,0 +1,25 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+secrets*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# IDE settings (editor-specific; project tooling lives in pyproject.toml)
+.idea/
+
+# Local data (exploration snapshots, outputs)
+data/
+
+# OS files
+desktop.ini
+Thumbs.db

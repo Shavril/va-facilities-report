@@ -1,0 +1,212 @@
+{
+  "data": [
+    {
+      "id": "vba_301",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Boston VA Regional Benefit Office",
+        "facilityType": "va_benefits_facility",
+        "classification": "Regional Benefit Office",
+        "website": "https://www.va.gov/find-locations/facility/vba_301",
+        "lat": 42.36138918,
+        "long": -71.06056219,
+        "timeZone": "America/New_York",
+        "address": {
+          "physical": {
+            "zip": "02203",
+            "city": "Boston",
+            "state": "MA",
+            "address1": "15 Sudbury Street",
+            "address2": "JFK Federal Building"
+          }
+        },
+        "phone": {
+          "main": "800-827-1000"
+        },
+        "hours": {
+          "monday": "8:00 a.m. - 4:30 p.m.",
+          "tuesday": "8:00 a.m. - 4:30 p.m.",
+          "wednesday": "8:00 a.m. - 4:30 p.m.",
+          "thursday": "8:00 a.m. - 4:30 p.m.",
+          "friday": "8:00 a.m. - 4:30 p.m.",
+          "saturday": "Closed",
+          "sunday": "Closed"
+        },
+        "services": {
+          "benefits": [
+            {
+              "name": "ApplyingForBenefits",
+              "serviceId": "applyingForBenefits",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/applyingForBenefits"
+            },
+            {
+              "name": "BurialClaimAssistance",
+              "serviceId": "burialClaimAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/burialClaimAssistance"
+            },
+            {
+              "name": "DisabilityClaimAssistance",
+              "serviceId": "disabilityClaimAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/disabilityClaimAssistance"
+            },
+            {
+              "name": "eBenefitsRegistrationAssistance",
+              "serviceId": "eBenefitsRegistrationAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/eBenefitsRegistrationAssistance"
+            },
+            {
+              "name": "EducationAndCareerCounseling",
+              "serviceId": "educationAndCareerCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/educationAndCareerCounseling"
+            },
+            {
+              "name": "EducationClaimAssistance",
+              "serviceId": "educationClaimAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/educationClaimAssistance"
+            },
+            {
+              "name": "FamilyMemberClaimAssistance",
+              "serviceId": "familyMemberClaimAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/familyMemberClaimAssistance"
+            },
+            {
+              "name": "HomelessAssistance",
+              "serviceId": "homelessAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/homelessAssistance"
+            },
+            {
+              "name": "UpdatingDirectDepositInformation",
+              "serviceId": "updatingDirectDepositInformation",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/updatingDirectDepositInformation"
+            },
+            {
+              "name": "VocationalRehabilitationAndEmploymentAssistance",
+              "serviceId": "vocationalRehabilitationAndEmploymentAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services/vocationalRehabilitationAndEmploymentAssistance"
+            }
+          ],
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301/services"
+        },
+        "operatingStatus": {
+          "code": "NORMAL"
+        }
+      }
+    },
+    {
+      "id": "vba_301a",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Veteran Readiness and Employment Office at Springfield, MA Vet Center",
+        "facilityType": "va_benefits_facility",
+        "classification": "Veteran Readiness and Employment Office",
+        "website": "https://www.va.gov/find-locations/facility/vba_301a",
+        "lat": 42.13908173,
+        "long": -72.62449885,
+        "timeZone": "America/New_York",
+        "address": {
+          "physical": {
+            "zip": "01089",
+            "city": "Springfield",
+            "state": "MA",
+            "address1": "95 Ashley Avenue",
+            "address2": "Suite A"
+          }
+        },
+        "phone": {
+          "main": "413-737-5167"
+        },
+        "hours": {
+          "monday": "7:30 a.m. - 5:00 p.m.",
+          "tuesday": "7:30 a.m. - 5:00 p.m.",
+          "wednesday": "7:30 a.m. - 5:00 p.m.",
+          "thursday": "7:30 a.m. - 5:00 p.m.",
+          "friday": "7:30 a.m. - 5:00 p.m.",
+          "saturday": "Closed",
+          "sunday": "Closed"
+        },
+        "services": {
+          "benefits": [
+            {
+              "name": "EducationAndCareerCounseling",
+              "serviceId": "educationAndCareerCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301a/services/educationAndCareerCounseling"
+            },
+            {
+              "name": "VocationalRehabilitationAndEmploymentAssistance",
+              "serviceId": "vocationalRehabilitationAndEmploymentAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301a/services/vocationalRehabilitationAndEmploymentAssistance"
+            }
+          ],
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301a/services"
+        },
+        "operatingStatus": {
+          "code": "NORMAL"
+        }
+      }
+    },
+    {
+      "id": "vba_301b",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Veteran Readiness and Employment Office at Worcester VA Clinic",
+        "facilityType": "va_benefits_facility",
+        "classification": "Veteran Readiness and Employment Office",
+        "lat": 42.29755654,
+        "long": -71.76754286,
+        "timeZone": "America/New_York",
+        "address": {
+          "physical": {
+            "zip": "01605",
+            "city": "Worcester",
+            "state": "MA",
+            "address1": "605 Lincoln St"
+          }
+        },
+        "phone": {
+          "main": "508-856-0104"
+        },
+        "hours": {
+          "monday": "7:00 a.m. - 5:30 p.m.",
+          "tuesday": "7:00 a.m. - 5:30 p.m.",
+          "wednesday": "7:00 a.m. - 5:30 p.m.",
+          "thursday": "7:00 a.m. - 5:30 p.m.",
+          "friday": "Closed",
+          "saturday": "Closed",
+          "sunday": "Closed"
+        },
+        "services": {
+          "benefits": [
+            {
+              "name": "EducationAndCareerCounseling",
+              "serviceId": "educationAndCareerCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301b/services/educationAndCareerCounseling"
+            },
+            {
+              "name": "VocationalRehabilitationAndEmploymentAssistance",
+              "serviceId": "vocationalRehabilitationAndEmploymentAssistance",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301b/services/vocationalRehabilitationAndEmploymentAssistance"
+            }
+          ],
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vba_301b/services"
+        },
+        "operatingStatus": {
+          "code": "NORMAL"
+        }
+      }
+    }
+  ],
+  "links": {
+    "self": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=benefits&page=1&per_page=200",
+    "first": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=benefits&page=1&per_page=200",
+    "next": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=benefits&page=2&per_page=200",
+    "last": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=benefits&page=3&per_page=200"
+  },
+  "meta": {
+    "pagination": {
+      "currentPage": 1,
+      "perPage": 200,
+      "totalPages": 3,
+      "totalEntries": 435
+    }
+  }
+}

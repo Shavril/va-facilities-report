@@ -1,0 +1,364 @@
+{
+  "data": [
+    {
+      "id": "vc_0101V",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Boston Vet Center",
+        "facilityType": "vet_center",
+        "parent": {
+          "id": "vc_523",
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_523"
+        },
+        "website": "https://www.va.gov/boston-vet-center/",
+        "lat": 42.34459497,
+        "long": -71.03613513,
+        "timeZone": "America/New_York",
+        "address": {
+          "physical": {
+            "zip": "02210-2303",
+            "city": "Boston",
+            "state": "MA",
+            "address1": "7 Drydock Avenue",
+            "address2": "Suite 2070"
+          }
+        },
+        "phone": {
+          "fax": "857-364-6577",
+          "main": "857-203-6461"
+        },
+        "hours": {
+          "monday": "800AM-430PM",
+          "tuesday": "800AM-430PM",
+          "wednesday": "800AM-430PM",
+          "thursday": "800AM-430PM",
+          "friday": "800AM-430PM",
+          "saturday": "Closed",
+          "sunday": "Closed"
+        },
+        "operationalHoursSpecialInstructions": [
+          "More hours are available for some services. To learn more, call our main phone number.",
+          "If you need to talk to someone or get advice right away, call the Vet Center anytime at 1-877-WAR-VETS (1-877-927-8387)."
+        ],
+        "services": {
+          "health": [
+            {
+              "name": "Addiction and substance use care",
+              "serviceId": "addiction",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/addiction"
+            },
+            {
+              "name": "Community engagement",
+              "serviceId": "communityEngagement",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/communityEngagement"
+            },
+            {
+              "name": "Couples and family counseling",
+              "serviceId": "familyCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/familyCounseling"
+            },
+            {
+              "name": "Grief and bereavement counseling",
+              "serviceId": "griefCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/griefCounseling"
+            },
+            {
+              "name": "LGBTQ+ Veteran care",
+              "serviceId": "lgbtq",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/lgbtq"
+            },
+            {
+              "name": "Military sexual trauma care",
+              "serviceId": "militarySexualTrauma",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/militarySexualTrauma"
+            },
+            {
+              "name": "PTSD care",
+              "serviceId": "ptsd",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/ptsd"
+            },
+            {
+              "name": "Suicide prevention",
+              "serviceId": "suicidePrevention",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/suicidePrevention"
+            },
+            {
+              "name": "Telehealth",
+              "serviceId": "telehealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/telehealth"
+            },
+            {
+              "name": "Returning service member care",
+              "serviceId": "transitionCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/transitionCounseling"
+            },
+            {
+              "name": "Veteran connections",
+              "serviceId": "veteranConnections",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/veteranConnections"
+            },
+            {
+              "name": "Women Veteran care",
+              "serviceId": "womensHealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services/womensHealth"
+            }
+          ],
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0101V/services"
+        },
+        "mobile": false,
+        "operatingStatus": {
+          "code": "NORMAL"
+        },
+        "visn": "1"
+      }
+    },
+    {
+      "id": "vc_0102V",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Secaucus Vet Center",
+        "facilityType": "vet_center",
+        "parent": {
+          "id": "vc_561",
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_561"
+        },
+        "website": "https://www.va.gov/secaucus-vet-center/",
+        "lat": 40.78911661,
+        "long": -74.07389209,
+        "timeZone": "America/New_York",
+        "address": {
+          "physical": {
+            "zip": "07094-2302",
+            "city": "Secaucus",
+            "state": "NJ",
+            "address1": "110A Meadowlands Parkway",
+            "address2": "Suite 102"
+          }
+        },
+        "phone": {
+          "fax": "201-223-7707",
+          "main": "201-223-7787"
+        },
+        "hours": {
+          "monday": "800AM-430PM",
+          "tuesday": "800AM-430PM",
+          "wednesday": "800AM-430PM",
+          "thursday": "800AM-430PM",
+          "friday": "800AM-430PM",
+          "saturday": "Closed",
+          "sunday": "Closed"
+        },
+        "operationalHoursSpecialInstructions": [
+          "More hours are available for some services. To learn more, call our main phone number.",
+          "If you need to talk to someone or get advice right away, call the Vet Center anytime at 1-877-WAR-VETS (1-877-927-8387)."
+        ],
+        "services": {
+          "health": [
+            {
+              "name": "Addiction and substance use care",
+              "serviceId": "addiction",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/addiction"
+            },
+            {
+              "name": "Community engagement",
+              "serviceId": "communityEngagement",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/communityEngagement"
+            },
+            {
+              "name": "Couples and family counseling",
+              "serviceId": "familyCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/familyCounseling"
+            },
+            {
+              "name": "Grief and bereavement counseling",
+              "serviceId": "griefCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/griefCounseling"
+            },
+            {
+              "name": "Homeless Veteran care",
+              "serviceId": "homeless",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/homeless"
+            },
+            {
+              "name": "Military sexual trauma care",
+              "serviceId": "militarySexualTrauma",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/militarySexualTrauma"
+            },
+            {
+              "name": "PTSD care",
+              "serviceId": "ptsd",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/ptsd"
+            },
+            {
+              "name": "Suicide prevention",
+              "serviceId": "suicidePrevention",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/suicidePrevention"
+            },
+            {
+              "name": "Telehealth",
+              "serviceId": "telehealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/telehealth"
+            },
+            {
+              "name": "Returning service member care",
+              "serviceId": "transitionCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/transitionCounseling"
+            },
+            {
+              "name": "Veteran connections",
+              "serviceId": "veteranConnections",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/veteranConnections"
+            },
+            {
+              "name": "Whole health",
+              "serviceId": "wholeHealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services/wholeHealth"
+            }
+          ],
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0102V/services"
+        },
+        "mobile": false,
+        "operatingStatus": {
+          "code": "NORMAL"
+        },
+        "visn": "2"
+      }
+    },
+    {
+      "id": "vc_0103V",
+      "type": "va_facilities",
+      "attributes": {
+        "name": "Springfield, MA Vet Center",
+        "facilityType": "vet_center",
+        "parent": {
+          "id": "vc_631",
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_631"
+        },
+        "website": "https://www.va.gov/springfield-ma-vet-center/",
+        "lat": 42.13899617,
+        "long": -72.62454996,
+        "timeZone": "America/New_York",
+        "address": {
+          "physical": {
+            "zip": "01089-1352",
+            "city": "West Springfield",
+            "state": "MA",
+            "address1": "95 Ashley Avenue",
+            "address2": "Suite A"
+          }
+        },
+        "phone": {
+          "fax": "413-582-3022",
+          "main": "413-737-5167"
+        },
+        "hours": {
+          "monday": "800AM-430PM",
+          "tuesday": "800AM-430PM",
+          "wednesday": "800AM-430PM",
+          "thursday": "800AM-430PM",
+          "friday": "800AM-430PM",
+          "saturday": "Closed",
+          "sunday": "Closed"
+        },
+        "operationalHoursSpecialInstructions": [
+          "If you need to talk to someone or get advice right away, call the Vet Center anytime at 1-877-WAR-VETS (1-877-927-8387)."
+        ],
+        "services": {
+          "health": [
+            {
+              "name": "Addiction and substance use care",
+              "serviceId": "addiction",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/addiction"
+            },
+            {
+              "name": "Community engagement",
+              "serviceId": "communityEngagement",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/communityEngagement"
+            },
+            {
+              "name": "Veteran readiness and employment programs",
+              "serviceId": "employmentPrograms",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/employmentPrograms"
+            },
+            {
+              "name": "Couples and family counseling",
+              "serviceId": "familyCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/familyCounseling"
+            },
+            {
+              "name": "Grief and bereavement counseling",
+              "serviceId": "griefCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/griefCounseling"
+            },
+            {
+              "name": "Military sexual trauma care",
+              "serviceId": "militarySexualTrauma",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/militarySexualTrauma"
+            },
+            {
+              "name": "Minority Veteran care",
+              "serviceId": "minorityCare",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/minorityCare"
+            },
+            {
+              "name": "PTSD care",
+              "serviceId": "ptsd",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/ptsd"
+            },
+            {
+              "name": "Suicide prevention",
+              "serviceId": "suicidePrevention",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/suicidePrevention"
+            },
+            {
+              "name": "Telehealth",
+              "serviceId": "telehealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/telehealth"
+            },
+            {
+              "name": "Returning service member care",
+              "serviceId": "transitionCounseling",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/transitionCounseling"
+            },
+            {
+              "name": "Veteran connections",
+              "serviceId": "veteranConnections",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/veteranConnections"
+            },
+            {
+              "name": "Whole health",
+              "serviceId": "wholeHealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/wholeHealth"
+            },
+            {
+              "name": "Women Veteran care",
+              "serviceId": "womensHealth",
+              "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services/womensHealth"
+            }
+          ],
+          "link": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities/vc_0103V/services"
+        },
+        "mobile": false,
+        "operatingStatus": {
+          "code": "TEMPORARY_CLOSURE",
+          "additionalInfo": "temp closed"
+        },
+        "visn": "1"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=vet_center&page=1&per_page=200",
+    "first": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=vet_center&page=1&per_page=200",
+    "next": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=vet_center&page=2&per_page=200",
+    "last": "https://sandbox-api.va.gov/services/va_facilities/v1/facilities?type=vet_center&page=3&per_page=200"
+  },
+  "meta": {
+    "pagination": {
+      "currentPage": 1,
+      "perPage": 200,
+      "totalPages": 3,
+      "totalEntries": 417
+    }
+  }
+}
