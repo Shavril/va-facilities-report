@@ -14,11 +14,19 @@ dist/
 build/
 *.egg-info/
 
+# Terraform: provider downloads and state (state can contain sensitive values).
+# .terraform.lock.hcl IS committed: it pins provider versions.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
 # IDE settings (editor-specific; project tooling lives in pyproject.toml)
 .idea/
 
 # Local data (exploration snapshots, outputs)
-data/
+/data/
 
 # OS files
 desktop.ini

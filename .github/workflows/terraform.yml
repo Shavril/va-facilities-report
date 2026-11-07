@@ -1,0 +1,98 @@
+name: terraform
+
+# - pull request changing infrastructure: `terraform plan` (read-only role),
+#   shown in the job summary
+# - push to main changing infrastructure: `terraform apply` (needs approval)
+# - manual run ("Run workflow"): rebuild, i.e. apply everything, e.g. after
+#   a teardown
+#
+# Parts: base/ (free: API key parameter) is applied before data/ (costs
+# money: S3, later Redshift). github-access/ is never touched by workflows.
+on:
+  pull_request:
+    paths: ["infrastructure/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["infrastructure/**", ".github/workflows/terraform.yml"]
+  workflow_dispatch:
+
+# Never run two Terraform workflows at once (the state lock would also stop
+# it, but queueing is friendlier than failing).
+concurrency:
+  group: terraform
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # OIDC login to AWS
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+          terraform_wrapper: false
+      - name: Plan base/ and data/
+        run: |
+          for part in base data; do
+            terraform -chdir=infrastructure/$part init -input=false
+            terraform -chdir=infrastructure/$part plan -input=false -no-color \
+              | tee plan-$part.txt
+            { echo "### $part/"; echo '```'; grep -E '^(Plan:|No changes)|will be|must be' plan-$part.txt; echo '```'; } \
+              >> "$GITHUB_STEP_SUMMARY"
+          done
+
+  apply:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: aws # requires approval; the deploy role trusts only this
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+          terraform_wrapper: false
+      - name: Apply base/ then data/
+        run: |
+          for part in base data; do
+            terraform -chdir=infrastructure/$part init -input=false
+            terraform -chdir=infrastructure/$part apply -input=false -auto-approve
+          done
+
+      # A freshly created parameter holds Terraform's placeholder. Write the
+      # real key from the environment secret, outside Terraform, so it never
+      # enters Terraform state. A key that is already set is left alone.
+      - name: Set the API key if the parameter holds the placeholder
+        env:
+          VA_API_KEY: ${{ secrets.VA_API_KEY }}
+        run: |
+          name=$(terraform -chdir=infrastructure/base output -raw api_key_parameter)
+          current=$(aws ssm get-parameter --name "$name" --with-decryption \
+            --query Parameter.Value --output text)
+          if [ "$current" = "set-me-with-aws-ssm-put-parameter" ]; then
+            if [ -z "$VA_API_KEY" ]; then
+              echo "::error::$name holds the placeholder and secret VA_API_KEY is not set"
+              exit 1
+            fi
+            aws ssm put-parameter --name "$name" --type SecureString \
+              --overwrite --value "$VA_API_KEY" > /dev/null
+            echo "API key written to $name"
+          else
+            echo "API key already set in $name; left unchanged"
+          fi

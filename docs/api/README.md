@@ -8,6 +8,28 @@ Sample responses are in [`samples/`](samples/).
 > **Sandbox data is test data.** VA states it "is not guaranteed to be up-to-date".
 > Nothing in this project should be read as current production VA data.
 
+## What the sandbox data is
+
+The VA API sandbox (Lighthouse platform) is a development environment:
+developers test integrations against it before requesting production
+access. VA describes sandbox environments as populated with test data, free
+of personal or health information, and in parts synthetic. For this API
+that means, as far as we can observe:
+
+- **The facility directory looks real.** IDs, names, addresses and phone
+  numbers match real facilities (e.g. `vha_402`, Togus VA Medical Center,
+  Augusta, ME, 207-623-8411).
+- **Measurements cannot be trusted as real.** Nothing in the responses says
+  whether a wait time or satisfaction score is a real measurement, a copy
+  of an old one, or generated. They also behave unlike real data: satisfaction
+  scores for 1,085 facilities appeared overnight, all dated 2026-03-30 (see
+  "Day-to-day changes").
+
+Consequence for the project: it is a **demonstration of the approach**
+(ingestion, history, data quality, modelling, reporting). Analytical results
+built on sandbox data illustrate the method and say nothing about real VA
+facilities.
+
 ## Access
 
 - **Auth:** API key in the `apikey` HTTP header.
@@ -67,7 +89,7 @@ Fields differ by type:
 | `mobile` | ✓ | — | — | ✓ |
 | `operatingStatus.supplementalStatus[]` | — | — | ✓ | — |
 | `phone.pharmacy`, `.mentalHealthClinic`, … | ✓ | — | — | — |
-| `satisfaction` (patient survey scores) | 1 facility only | — | — | — |
+| `satisfaction` (patient survey scores) | 1 facility on 2026-11-06, 1,086 on 2026-11-07 | — | — | — |
 
 `operatingStatus.code` values seen: `NORMAL`, `NOTICE`, `LIMITED`,
 `TEMPORARY_CLOSURE`, `TEMPORARY_LOCATION`, `CLOSED`, `COMING_SOON`, `VIRTUAL_CARE`.
@@ -95,9 +117,10 @@ Fields differ by type:
 
 - **No record-level modification timestamp.** There is no `updatedAt` or
   similar on facilities, and no "changed since" filter.
-- `services.lastUpdated` (health only) and `waitTime.effectiveDate` were both
-  2026-11-05, the day before exploration. They may just be the date of the
-  sandbox's last refresh, not real change dates. To be verified.
+- `services.lastUpdated` (health only) and `waitTime.effectiveDate` mostly
+  equal the day before the download (2026-11-05 on 11-06, 2026-11-06 on
+  11-07). They behave like the date of the sandbox's last daily refresh, not
+  real change dates. See "Day-to-day changes" below.
 - **Implication:** incremental extraction is not possible. Each run does a
   full pull (3 requests, which is cheap) and detects changes by **comparing
   snapshots** (e.g. a hash of each record). Facilities missing from `/ids`
@@ -144,10 +167,26 @@ On `/facilities` records. `satisfaction.health` holds `primaryCareUrgent`,
 is the share of Veterans who say they usually or always get an appointment
 when needed. There is also an `effectiveDate`.
 
-**Sandbox limitation:** only **1 of 2,586** facilities has `satisfaction`
-(`vha_573GO`, a health facility; no Vet Center, benefits office or cemetery
-has it). We have not verified whether production has better coverage. In
-sandbox, satisfaction cannot support facility comparisons.
+**Coverage is unstable in sandbox.** On 2026-11-06 only **1 of 2,586**
+facilities had `satisfaction` (`vha_573GO`). On 2026-11-07, **1,086 of 1,401
+health facilities** had it (still no Vet Center, benefits office or
+cemetery). The `effectiveDate` stayed `2026-03-30` for all of them, so this
+looks like an existing dataset being (re)loaded, not new survey results.
+Whether it stays, disappears again, or changes is under investigation (see
+"Day-to-day changes").
+
+Coverage by score on 2026-11-07 (health facilities):
+
+| Score | Present | Exactly `0.0` | Above 0 |
+|---|---|---|---|
+| `primaryCareRoutine` | 1,084 | 96 | 988 |
+| `primaryCareUrgent` | 1,083 | **673** | 410 |
+| `specialtyCareRoutine` | 140 | 1 | 139 |
+| `specialtyCareUrgent` | 140 | 1 | 139 |
+
+Scores range from 0.0 to 1.0. The large number of exact zeros for urgent
+primary care (against 96 for routine) suggests `0.0` often means "no data"
+rather than 0% of Veterans getting an appointment. Not confirmed.
 
 How it looks when missing: **the `satisfaction` key is omitted entirely**. It
 is never `null`, `{}` or zeros (checked on all 1,401 health facilities,
@@ -161,9 +200,9 @@ satisfaction has only two of the four scores:
 }
 ```
 
-The `0.0` is an explicit value in the data. With a single example we cannot
-tell a real 0% from a placeholder. Processing keeps it as `0.0` and maps
-omitted scores to `null`, so "no data" and "zero" stay distinguishable.
+The `0.0` is an explicit value in the data. Processing keeps it as `0.0` and
+maps omitted scores to `null`, so "no data" and "zero" stay distinguishable
+and the interpretation of `0.0` can be decided later, in SQL.
 
 ## Stale measurements (first full run, 2026-11-06)
 
@@ -173,7 +212,8 @@ recent**. The API keeps returning old measurements:
 - **Wait times:** 5,929 of 6,185 are ≤7 days old (5,922 dated 2026-11-05).
   **256 are older**, some going back to **May 2024**.
 - 14 facilities have only stale wait times. 196 have a mix of fresh and stale.
-- **Satisfaction:** the only value is 221 days old.
+- **Satisfaction:** dated 2026-03-30 (221 days old on 2026-11-06), so every
+  satisfaction score is flagged stale.
 - No wait time lacks an `effectiveDate`, and none is dated in the future.
 
 Processing therefore adds `*_age_days` and `*_is_stale` columns (see the
@@ -216,12 +256,35 @@ assessed", never as "no wait". Processing tags this with two independent
 booleans on `facilities`, `no_service` and `no_wait_time_listed` (see the
 project README).
 
+## Day-to-day changes (2026-11-06 vs 2026-11-07)
+
+Two full health runs, compared:
+
+| Run | Started (UTC) | Finished (UTC) |
+|---|---|---|
+| 2026-11-06 | 18:55:55 | 19:23:44 |
+| 2026-11-07 | 02:43:46 | 03:08:33 |
+
+The changes happened somewhere in those ~7 hours between runs.
+
+| What | Change |
+|---|---|
+| Facilities | none added or removed (1,401 both days) |
+| `satisfaction` | appeared on **1,085** more facilities (1 → 1,086), all dated 2026-03-30 |
+| `services.lastUpdated` | moved 2026-11-05 → 2026-11-06 on 1,228 facilities |
+| Service list | 12 services added, 3 removed (e.g. `vha_437GJ` urology added, `vha_459QA` mentalHealth removed) |
+| Wait times | `effectiveDate` moved on 5,918 services (now mostly 2026-11-06); `new` days changed on 2,679, `established` on 1,648 |
+| Other attributes | no changes (names, addresses, coordinates, hours, status) |
+
+**Reading:** wait times and the service list look like a regular **daily
+refresh**. Satisfaction behaves differently: a large, sudden change with an
+unchanged date. Which of these change at what time, and whether satisfaction
+comes and goes, is what the hourly investigation is meant to find out.
+
 ## Open questions
 
-1. Does sandbox data change between days? A baseline snapshot from 2026-11-06
-   is in `data/exploration/` (gitignored). Compare it with a later pull.
-   Most wait-time `effectiveDate`s were 2026-11-05, which suggests daily
-   refreshes, but 256 were older (see "Stale measurements").
-2. What is satisfaction coverage in production?
+1. When exactly is sandbox data refreshed, and is satisfaction coverage
+   stable? Under investigation with hourly snapshots.
+2. What is satisfaction coverage in production? Does `0.0` mean "no data"?
 3. What is the production rate limit? It needs a production access request
    and is out of scope for now.

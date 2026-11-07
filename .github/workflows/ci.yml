@@ -1,0 +1,40 @@
+name: ci
+
+# Code checks on every push and pull request. Needs no AWS access.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+          terraform_wrapper: false
+      - run: terraform fmt -check -recursive infrastructure
+      - name: Validate each part (no backend, no AWS access)
+        run: |
+          for part in github-access base data; do
+            echo "::group::$part"
+            terraform -chdir=infrastructure/$part init -backend=false -input=false
+            terraform -chdir=infrastructure/$part validate
+            echo "::endgroup::"
+          done

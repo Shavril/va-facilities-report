@@ -17,8 +17,12 @@ Days are UTC. `run` always works on today, because the API only returns
 current data.
 
 configuration (environment variables, see .env.example):
-  VA_API_KEY, VA_API_BASE_URL   needed by `run`
-  DATA_DIR                      storage root (default: data/)
+  VA_API_BASE_URL               needed by `run`
+  VA_API_KEY                    API key, needed by `run`; or instead
+  VA_API_KEY_SSM_PARAMETER      SSM parameter name to read the key from
+  DATA_DIR                      local folder (default: data) or
+                                s3://bucket[/prefix]
+  AWS_PROFILE                   AWS credentials, when S3 or SSM is used
 
 examples:
   uv run --env-file .env va-facilities run
@@ -35,7 +39,7 @@ from va_facilities_report.config import load_data_dir, load_settings
 from va_facilities_report.ingestion.extract import run_extraction
 from va_facilities_report.logging_config import configure_logging
 from va_facilities_report.processing.pipeline import run_processing
-from va_facilities_report.storage import LocalStorage, Storage
+from va_facilities_report.storage import Storage, open_storage
 
 log = logging.getLogger("va_facilities_report.cli")
 
@@ -83,10 +87,14 @@ def main(argv: list[str] | None = None) -> int:
     # Which day to work on: `run` always today; `process` today unless --date.
     today = datetime.now(UTC).date()
     ingestion_date = getattr(args, "date", None) or today
-    storage = LocalStorage(load_data_dir())
+    storage = open_storage(load_data_dir())
     log.info(
         "command started",
-        extra={"command": args.command, "ingestion_date": ingestion_date},
+        extra={
+            "command": args.command,
+            "ingestion_date": ingestion_date,
+            "storage": repr(storage),
+        },
     )
 
     # Run the command. Any failure is logged with its traceback and turned

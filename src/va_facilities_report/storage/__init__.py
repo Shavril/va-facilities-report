@@ -1,8 +1,9 @@
 """Object storage for raw and processed data.
 
-Keys are S3-style paths ("raw/facilities/facility_type=health/..."). The
-local implementation mirrors that layout on disk; an S3 implementation with
-the same three methods will be added in Phase 3.
+Keys are S3-style paths ("raw/facilities/facility_type=health/..."). Two
+implementations share the same three methods: LocalStorage mirrors the
+layout on disk, S3Storage (storage/s3.py) writes it to a bucket.
+`open_storage` picks one from a location string such as DATA_DIR.
 """
 
 import os
@@ -31,9 +32,25 @@ class Storage(Protocol):
     def write_bytes(self, key: str, data: bytes) -> None: ...
 
 
+def open_storage(location: str) -> Storage:
+    """`s3://bucket[/prefix]` -> S3Storage, anything else -> local folder."""
+    if location.startswith("s3://"):
+        # Imported here so local runs (and tests) never load boto3.
+        from va_facilities_report.storage.s3 import S3Storage
+
+        bucket, _, prefix = location.removeprefix("s3://").partition("/")
+        if not bucket:
+            raise ValueError(f"no bucket in storage location: {location}")
+        return S3Storage(bucket, prefix)
+    return LocalStorage(Path(location))
+
+
 class LocalStorage:
     def __init__(self, root: Path) -> None:
         self.root = root
+
+    def __repr__(self) -> str:
+        return f"LocalStorage({self.root})"
 
     def _path(self, key: str) -> Path:
         # Refuse keys like "../x" that would point outside the storage root.
