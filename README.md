@@ -58,9 +58,11 @@ Full details: [docs/api/README.md](docs/api/README.md).
   2026-11-06, on 1,086 health facilities the next day, all with the same
   date (2026-03-30). Many urgent primary-care scores are exactly `0.0`,
   which may mean "no data". When missing, the key is omitted, never `null`.
-- **Sandbox data changes daily:** wait times and service lists are
-  refreshed every day. Satisfaction changed in a different, sudden way;
-  an hourly investigation is under way.
+- **Sandbox data changes in daily batches:** 42 hourly runs showed that
+  wait times and service lists are replaced all at once, about once a day,
+  at no fixed time, and some days are skipped. Between refreshes the data
+  is identical, so one run a day is enough. Satisfaction appeared once and
+  has not changed since. See [docs/api](docs/api/README.md#hourly-snapshots-2026-11-07-to-2026-11-08).
 - **Not every facility can be assessed:** 142 health facilities (10%, mostly
   mobile units) list no services, and 48 more have services but no wait
   times. They must be reported as "not assessed", not "no wait".
@@ -266,8 +268,8 @@ delete the record of what exists.
 | `terraform` | push to `main` changing `infrastructure/`, or manual "Run workflow" (rebuild) | `terraform apply` for `base/` then `data/`, then writes the API key from a GitHub secret into SSM if the parameter holds the placeholder |
 | `teardown` | manual, scope `costs` or `full` + typed confirmation | backs up the data lake as a run artifact, then destroys `data/` (and `base/` for `full`) |
 
-Every job that changes AWS runs in the GitHub environment `aws`, which
-requires approval. The deploy role trusts only jobs in that environment;
+Every job that changes AWS runs in the GitHub environment `aws`, which only
+`main` can deploy to (no manual approval). The deploy role trusts only jobs in that environment;
 pull requests get the read-only plan role. `github-access/` is applied by
 hand and no workflow can modify it, so after a full teardown the
 `terraform` workflow can rebuild everything from GitHub.
@@ -294,7 +296,7 @@ Use the `teardown` workflow (Actions → teardown → Run workflow):
 
 - **costs**: type `destroy costs`. Removes the data lake (and later
   Redshift).
-- **full**: type `destroy everything`. Also removes the API key parameter.
+- **full**: type `destroy full`. Also removes the API key parameter.
 
 Both download the data lake first and attach it to the run as the artifact
 `data-lake-backup`: **download it to your laptop from the run page**. GitHub

@@ -20,7 +20,7 @@ on:
         options: [costs, full]
         required: true
       confirm:
-        description: 'Type "destroy costs" or "destroy everything" (must match the scope)'
+        description: 'Type "destroy" and the scope: "destroy costs" or "destroy full"'
         required: true
 
 concurrency:
@@ -38,15 +38,14 @@ env:
 jobs:
   teardown:
     runs-on: ubuntu-latest
-    environment: aws # requires approval; the deploy role trusts only this
+    environment: aws # the deploy role trusts only jobs in this environment
     steps:
       - name: Check confirmation
         env:
           SCOPE: ${{ inputs.scope }}
           CONFIRM: ${{ inputs.confirm }}
         run: |
-          expected="destroy costs"
-          [ "$SCOPE" = "full" ] && expected="destroy everything"
+          expected="destroy $SCOPE"
           if [ "$CONFIRM" != "$expected" ]; then
             echo "::error::Confirmation must be \"$expected\" for scope $SCOPE. Nothing was destroyed."
             exit 1
@@ -77,8 +76,20 @@ jobs:
             echo "found=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          objects=$(aws s3 ls "s3://$bucket" --recursive | wc -l)
+          if [ "$objects" -eq 0 ]; then
+            echo "Bucket $bucket is empty; nothing to back up."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           aws s3 sync "s3://$bucket" backup/ --only-show-errors
-          echo "Backed up $(find backup -type f | wc -l) files ($(du -sh backup | cut -f1)) from $bucket"
+          files=$(find backup -type f | wc -l)
+          # An incomplete backup stops the teardown: nothing gets destroyed.
+          if [ "$files" -ne "$objects" ]; then
+            echo "::error::Backup incomplete: $files files downloaded, $objects objects in $bucket. Nothing was destroyed."
+            exit 1
+          fi
+          echo "Backed up $files files ($(du -sh backup | cut -f1)) from $bucket"
           echo "found=true" >> "$GITHUB_OUTPUT"
 
       - name: Attach the backup to this run

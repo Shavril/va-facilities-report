@@ -77,7 +77,7 @@ are stored in GitHub.
 - **Plan role**: trusted for tokens with subject `...:pull_request`.
   Read-only, except the state lock file that even `plan` writes.
 - **Deploy role**: trusted only for jobs running in the GitHub environment
-  `aws` (subject `...:environment:aws`), which requires approval. Can manage
+  `aws` (subject `...:environment:aws`), which only `main` may deploy to. Can manage
   the data lake, the project's SSM parameters, and the `base/` and `data/`
   state files. It cannot touch `github-access/` or its state, so no
   workflow can lock itself out or widen its own permissions.
@@ -121,8 +121,8 @@ terraform output   # role ARNs for the GitHub settings below
 
 ### GitHub settings (once)
 
-1. **Settings → Environments → New environment** `aws`: add yourself as a
-   required reviewer and restrict deployment branches to `main`.
+1. **Settings → Environments → New environment** `aws`:
+   restrict deployment branches to `main` (a required reviewer is optional).
 2. In that environment, **add secret** `VA_API_KEY` (the VA sandbox key).
 3. **Settings → Secrets and variables → Actions → Variables**: add
    `AWS_PLAN_ROLE_ARN` and `AWS_DEPLOY_ROLE_ARN` from `terraform output`.
@@ -134,5 +134,5 @@ workflow backs up the data lake as a run artifact, then destroys `data/`
 (scope `costs`) or `data/` and `base/` (scope `full`); the `terraform`
 workflow ("Run workflow") rebuilds both and writes the API key back.
 `force_destroy = true` on the bucket lets `destroy` delete it with
-objects in it; the typed confirmation, approval and backup are the
+objects in it; the typed confirmation and the backup are the
 safeguards.

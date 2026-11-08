@@ -119,8 +119,11 @@ Fields differ by type:
   similar on facilities, and no "changed since" filter.
 - `services.lastUpdated` (health only) and `waitTime.effectiveDate` mostly
   equal the day before the download (2026-11-05 on 11-06, 2026-11-06 on
-  11-07). They behave like the date of the sandbox's last daily refresh, not
-  real change dates. See "Day-to-day changes" below.
+  11-07). They are the date of the sandbox's last batch refresh, not real
+  change dates. See "Day-to-day changes" below.
+- **Cheap "is there anything new?" check:** if `services.lastUpdated` is the
+  same as in the last stored run, the data has not been refreshed. In 42
+  hourly runs, the data never changed without this date moving.
 - **Implication:** incremental extraction is not possible. Each run does a
   full pull (3 requests, which is cheap) and detects changes by **comparing
   snapshots** (e.g. a hash of each record). Facilities missing from `/ids`
@@ -172,8 +175,8 @@ facilities had `satisfaction` (`vha_573GO`). On 2026-11-07, **1,086 of 1,401
 health facilities** had it (still no Vet Center, benefits office or
 cemetery). The `effectiveDate` stayed `2026-03-30` for all of them, so this
 looks like an existing dataset being (re)loaded, not new survey results.
-Whether it stays, disappears again, or changes is under investigation (see
-"Day-to-day changes").
+It has not changed since: the wait-time refresh on 2026-11-08 left every
+satisfaction value untouched (see "Hourly snapshots" below).
 
 Coverage by score on 2026-11-07 (health facilities):
 
@@ -278,13 +281,69 @@ The changes happened somewhere in those ~7 hours between runs.
 
 **Reading:** wait times and the service list look like a regular **daily
 refresh**. Satisfaction behaves differently: a large, sudden change with an
-unchanged date. Which of these change at what time, and whether satisfaction
-comes and goes, is what the hourly investigation is meant to find out.
+unchanged date.
+
+### Hourly snapshots (2026-11-07 to 2026-11-08)
+
+To find out when and how the data changes, the full pipeline ran **every
+hour** (identical code) and each run was compared with the previous one
+(`scripts/compare_snapshots.py`, field by field, derived columns excluded).
+42 runs, 2026-11-06 18:55 to 2026-11-08 19:00 UTC:
+
+| Between runs (UTC) | Changes |
+|---|---|
+| 11-06 18:55 → 11-07 02:43 | data date 2026-11-05 → **2026-11-06**, satisfaction appears (above) |
+| 11-07 02:43 → 11-08 12:00 (34 runs) | **none**, every value identical |
+| 11-08 12:00 → 11-08 13:00 | data date 2026-11-06 → **2026-11-08** (see below) |
+| 11-08 13:00 → 11-08 19:00 (6 runs) | **none** |
+
+The 2026-11-08 refresh:
+
+| What | Change |
+|---|---|
+| `services.lastUpdated` | 2026-11-06 → 2026-11-08 on all 1,228 facilities that have it |
+| Wait-time `effectiveDate` | → 2026-11-08 on 5,927 services |
+| Wait-time values | `new` changed on 3,419 services, `established` on 2,375; typically by ±1–2 days (median −1), extremes −149 / +124 |
+| Wait times appearing / disappearing | `new` went value ↔ null on 60 services, `established` on 15 |
+| Service list | 31 services added, 6 removed (18,219 → 18,244 rows) |
+| Satisfaction, facility attributes | **no changes** (names, addresses, coordinates, hours, status) |
+
+Findings:
+
+1. **Refreshes are whole-dataset batches.** All facilities move to the same
+   new date at once. No hourly run ever saw a half-refreshed dataset.
+2. **The refresh time is not fixed.** The first fell between 19:23 and
+   02:43 UTC; the second between **12:24 and 13:00 UTC** (the 12:00 run
+   finished at 12:24 with old data, the 13:00 run had new data from its first
+   request).
+3. **Days can be skipped.** There was no data dated 2026-11-07 (a Saturday);
+   the date jumped from 11-06 to 11-08.
+4. **Only wait-time data changes daily.** About 30% of wait-time values
+   move per refresh. A service row exists only when the facility publishes it
+   that day: rows with no wait times at all also disappear and reappear, and
+   4 rows flipped (removed in one refresh, back in the next, or the reverse,
+   e.g. `vha_438GE` cardiology).
+5. **Satisfaction was a one-off load** (effective date 2026-03-30) and has
+   not changed since.
+
+**Implications for the pipeline:**
+
+- **One run a day is enough.** Hourly runs mostly produce identical copies.
+  With the observed refresh times, a run in the afternoon (UTC) is the most
+  likely to pick up the day's data, but this is based on two refreshes only.
+- History comes from **comparing snapshots** (the record hashes already
+  support this), and a changed `services.lastUpdated` signals a new refresh.
+- A run takes ~25 minutes, so it could straddle a refresh. A data quality
+  check that all facilities in one run share the same `services.lastUpdated`
+  would catch a mixed snapshot. Not observed so far.
+
+The hourly runs continue, to see whether refresh time and skipped days
+differ on weekdays.
 
 ## Open questions
 
-1. When exactly is sandbox data refreshed, and is satisfaction coverage
-   stable? Under investigation with hourly snapshots.
+1. Is there a regular refresh time on weekdays, and are weekends skipped?
+   Under investigation with hourly snapshots.
 2. What is satisfaction coverage in production? Does `0.0` mean "no data"?
 3. What is the production rate limit? It needs a production access request
    and is out of scope for now.
