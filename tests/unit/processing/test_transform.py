@@ -68,6 +68,23 @@ def test_facility_row_flattens_fields() -> None:
     assert row["satisfaction_effective_date"] == date(2026, 3, 30)
 
 
+@pytest.mark.parametrize(
+    ("notes", "expected"),
+    [
+        (["Mon-Fri 8-4:30."], "Mon-Fri 8-4:30."),
+        (["Closed holidays. ", "Call ahead."], "Closed holidays. | Call ahead."),
+        ([], None),
+        (["", "  "], None),
+        (None, None),
+        ("not a list", None),
+    ],
+)
+def test_special_instructions_become_one_text(notes, expected) -> None:
+    record = raw_facility(operationalHoursSpecialInstructions=notes)
+
+    assert facility_row(record, DAY)["hours_special_instructions"] == expected
+
+
 def test_facility_row_handles_missing_sections() -> None:
     record = {
         "id": "vha_568PB",

@@ -56,7 +56,9 @@ FACILITY_SCHEMA: dict[str, pl.DataType] = {
     "operating_status_code": pl.String(),
     "operating_status_info": pl.String(),
     **{f"hours_{day}": pl.String() for day in WEEKDAYS},
-    "hours_special_instructions": pl.List(pl.String()),
+    # The API sends a list of notes (at most 2 seen); joined into one text so
+    # the column loads into Redshift and Looker Studio like any other.
+    "hours_special_instructions": pl.String(),
     "services_last_updated": pl.Date(),
     "satisfaction_primary_care_urgent": pl.Float64(),
     "satisfaction_primary_care_routine": pl.Float64(),
@@ -148,7 +150,9 @@ def facility_row(record: dict[str, Any], ingestion_date: date) -> dict[str, Any]
         "operating_status_code": status.get("code"),
         "operating_status_info": status.get("additionalInfo"),
         **{f"hours_{day}": hours.get(day) for day in WEEKDAYS},
-        "hours_special_instructions": attrs.get("operationalHoursSpecialInstructions"),
+        "hours_special_instructions": _joined_text(
+            attrs.get("operationalHoursSpecialInstructions")
+        ),
         "services_last_updated": _date_or_none(
             (attrs.get("services") or {}).get("lastUpdated")
         ),
@@ -401,6 +405,14 @@ def _float_or_none(value: Any) -> float | None:
 
 def _str_or_none(value: Any) -> str | None:
     return None if value is None else str(value)
+
+
+def _joined_text(value: Any, separator: str = " | ") -> str | None:
+    """A list of strings as one text; None for anything empty or not a list."""
+    if not isinstance(value, list):
+        return None
+    parts = [item.strip() for item in value if isinstance(item, str) and item.strip()]
+    return separator.join(parts) or None
 
 
 def _date_or_none(value: Any) -> date | None:
