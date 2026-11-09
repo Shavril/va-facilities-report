@@ -1,5 +1,7 @@
-# Resources that cost money: the S3 data lake (and, in Phase 4, Redshift).
-# Destroyed by both teardown workflows; the workflows back the bucket up first.
+# Resources that cost money: the S3 data lake (this file) and Redshift
+# Serverless (redshift.tf). Destroyed by both teardown workflows; the
+# workflows back the bucket up first. The warehouse needs no backup: it is
+# rebuilt from the data lake.
 
 data "aws_caller_identity" "current" {}
 

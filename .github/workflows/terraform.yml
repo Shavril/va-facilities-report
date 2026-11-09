@@ -1,4 +1,4 @@
-name: terraform
+name: "AWS: plan / deploy"
 
 # - pull request changing infrastructure: `terraform plan` (read-only role),
 #   shown in the job summary
@@ -7,7 +7,9 @@ name: terraform
 #   a teardown
 #
 # Parts: base/ (free: API key parameter) is applied before data/ (costs
-# money: S3, later Redshift). github-access/ is never touched by workflows.
+# money: S3, Redshift Serverless). github-access/ is never touched by
+# workflows. After apply, bootstrap.sh sets up users, schemas and grants
+# inside Redshift.
 on:
   pull_request:
     paths: ["infrastructure/**", ".github/workflows/terraform.yml"]
@@ -29,6 +31,9 @@ permissions:
 env:
   AWS_REGION: us-east-1
   TF_IN_AUTOMATION: "true"
+  # IAM user the pipeline runs as; gets its own schemas in Redshift.
+  PIPELINE_IAM_USER: pipeline-va-facilities-report
+  LOOKER_PASSWORD_PARAMETER: /va-facilities-report/redshift/looker-reader-password
 
 jobs:
   plan:
@@ -96,3 +101,12 @@ jobs:
           else
             echo "API key already set in $name; left unchanged"
           fi
+
+      # Users, schemas and grants inside the database (Terraform manages only
+      # AWS resources). Runs as this workflow's role, the namespace superuser.
+      - name: Bootstrap Redshift (users, schemas, grants)
+        run: |
+          out() { terraform -chdir=infrastructure/data output -raw "$1"; }
+          bash infrastructure/data/bootstrap.sh \
+            "$(out redshift_workgroup)" "$(out redshift_database)" \
+            "$PIPELINE_IAM_USER" "$LOOKER_PASSWORD_PARAMETER"

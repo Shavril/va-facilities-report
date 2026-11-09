@@ -6,8 +6,8 @@ split by **what a teardown removes**:
 | Part | Resources | Applied by | Destroyed by |
 |---|---|---|---|
 | `github-access/` | IAM roles GitHub Actions assumes via OIDC: `github-actions-va-facilities-report-plan` (read-only) and `-deploy` | hand, once, from a laptop | hand only |
-| `base/` | SSM parameter holding the VA API key | `terraform` workflow | `teardown` (full) |
-| `data/` | S3 data lake (Phase 4: Redshift Serverless) | `terraform` workflow | `teardown` (costs and full) |
+| `base/` | SSM parameter holding the VA API key | AWS: plan / deploy | AWS: teardown (full) |
+| `data/` | S3 data lake, Redshift Serverless (+ COPY role, Looker Studio security group) | AWS: plan / deploy | AWS: teardown (costs and full) |
 
 Order matters: `github-access/` first (once), then `base/`, then `data/`.
 The parts share nothing in Terraform; they only rely on naming conventions
@@ -49,7 +49,7 @@ OIDC role provides credentials.
 `base/` creates the parameter with the write-only argument `value_wo`
 (placeholder `set-me-with-aws-ssm-put-parameter`). Write-only values are
 never stored in state. The real key is written afterwards, outside
-Terraform: by the `terraform` workflow from the `VA_API_KEY` secret, or by
+Terraform: by the "AWS: plan / deploy" workflow from the `VA_API_KEY` secret, or by
 hand:
 
 ```bash
@@ -127,12 +127,87 @@ terraform output   # role ARNs for the GitHub settings below
 3. **Settings → Secrets and variables → Actions → Variables**: add
    `AWS_PLAN_ROLE_ARN` and `AWS_DEPLOY_ROLE_ARN` from `terraform output`.
 
+## Redshift Serverless (`data/redshift.tf`, `data/bootstrap.sh`)
+
+- **Namespace** (data: database `va_facilities`, users, schemas) and
+  **workgroup** (compute: base 4 RPU; network endpoint). No admin
+  password: IAM login through the Redshift Data API only.
+- **COPY role** `va-facilities-report-redshift-s3-read`: Redshift assumes
+  it to read `processed/` in the data lake. Read-only, nothing else.
+- **Looker Studio access:** public endpoint, security group allowing only
+  `142.251.74.0/23` (Google's published range) on 5439, SSL required by
+  default (`require_ssl` is left at its default `true`, which also avoids
+  Terraform `config_parameter` drift).
+- **Usage limit:** 30 RPU-hours a month, then queries stop (`deactivate`).
+- **Default VPC** and its subnets in `us-east-1a/b/c` are data sources,
+  never managed (a workgroup needs 3 availability zones).
+
+**Superuser and bootstrap.** Without an admin password, the identity that
+creates the namespace becomes its superuser; with the workflow that is the
+deploy role. The pipeline runs as a different identity (the IAM user
+`pipeline-va-facilities-report`, database user
+`IAM:pipeline-va-facilities-report`), which would have no rights at all.
+So after every apply the workflow runs `bootstrap.sh` as the deploy role.
+It is idempotent and:
+
+1. creates the pipeline's database user ahead of its first login
+   (`PASSWORD DISABLE`: IAM only);
+2. creates the schemas `staging`, `core`, `reporting`, **owned by** that
+   user, and revokes `CREATE` on `public` from everyone;
+3. creates `looker_reader` (read-only on `reporting`, including views
+   created later via default privileges). Its password is generated once
+   and stored only in SSM (`/va-facilities-report/redshift/looker-reader-password`);
+   Redshift receives `md5(password + username)`, so the password is never
+   in SQL text, query history or Terraform state. A rebuild reuses it, so
+   Looker Studio keeps working; only a `full` teardown deletes it.
+
+**Deploy role permissions for Redshift** (`github-access/`):
+`redshift-serverless:*` and the Data API on `*` (namespace and workgroup
+ARNs contain generated ids, so they cannot be limited by name; this also
+covers any other Redshift Serverless resource in the account), `ec2:Describe*`
+plus security-group management, and IAM role management limited to
+`role/va-facilities-report-*`, with `iam:PassRole` only to Redshift. Adding
+these means applying `github-access/` by hand again (see above).
+
+The pipeline's IAM user needs, in addition to S3 and SSM, the Data API and
+the IAM login to the workgroup. The AWS managed policies
+`AmazonRedshiftDataFullAccess` (+ `AmazonRedshiftFullAccess`) cover this,
+but also allow managing every Redshift resource in the account. The
+least-privilege equivalent:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RedshiftDataApi",
+      "Effect": "Allow",
+      "Action": [
+        "redshift-data:ExecuteStatement",
+        "redshift-data:BatchExecuteStatement",
+        "redshift-data:DescribeStatement",
+        "redshift-data:GetStatementResult",
+        "redshift-data:CancelStatement",
+        "redshift-data:ListStatements"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RedshiftLogin",
+      "Effect": "Allow",
+      "Action": "redshift-serverless:GetCredentials",
+      "Resource": "arn:aws:redshift-serverless:us-east-1:<account-id>:workgroup/*"
+    }
+  ]
+}
+```
+
 ## Teardown and rebuild
 
-See the project README ("Tearing it down"). In short: the `teardown`
-workflow backs up the data lake as a run artifact, then destroys `data/`
-(scope `costs`) or `data/` and `base/` (scope `full`); the `terraform`
-workflow ("Run workflow") rebuilds both and writes the API key back.
+See the project README ("Tearing it down"). In short: the "AWS: teardown
+(destroy)" workflow backs up the data lake as a run artifact, then destroys
+`data/` (scope `costs`) or `data/` and `base/` (scope `full`); "AWS: plan /
+deploy" ("Run workflow") rebuilds both and writes the API key back.
 `force_destroy = true` on the bucket lets `destroy` delete it with
 objects in it; the typed confirmation and the backup are the
 safeguards.

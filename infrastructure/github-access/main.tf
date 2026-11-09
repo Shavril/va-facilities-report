@@ -22,7 +22,7 @@ variable "github_repo" {
 }
 
 variable "github_environment" {
-  description = "GitHub environment (with required reviewers) that deploy jobs run in."
+  description = "GitHub environment that deploy jobs run in (deployments restricted to main)."
   type        = string
   default     = "aws"
 }
@@ -34,6 +34,10 @@ locals {
   state_bucket = "arn:aws:s3:::${var.project}-tfstate-${local.account_id}"
   data_bucket  = "arn:aws:s3:::${var.project}-${local.account_id}"
   parameters   = "arn:aws:ssm:${var.region}:${local.account_id}:parameter/${var.project}/*"
+  # IAM roles the data/ part creates (e.g. the role Redshift uses for COPY).
+  # The deploy role's own name starts with "github-actions-", so it is not
+  # covered: no self-escalation.
+  project_roles = "arn:aws:iam::${local.account_id}:role/${var.project}-*"
 
   # State files the workflows may use. github-access/ itself is excluded.
   workflow_state = ["${local.state_bucket}/base/*", "${local.state_bucket}/data/*"]
@@ -60,7 +64,7 @@ data "aws_iam_openid_connect_provider" "github" {
 data "aws_iam_policy_document" "trust" {
   for_each = {
     plan   = ":pull_request"                          # any PR in this repo
-    deploy = ":environment:${var.github_environment}" # only approved jobs
+    deploy = ":environment:${var.github_environment}" # only jobs in the environment
   }
 
   statement {
@@ -130,6 +134,27 @@ data "aws_iam_policy_document" "plan" {
     actions   = ["ssm:DescribeParameters"]
     resources = ["*"]
   }
+  statement {
+    # Redshift and EC2 read actions cannot be limited to our resources:
+    # namespace/workgroup ARNs contain generated ids. Read-only.
+    sid = "ReadWarehouseAndNetwork"
+    actions = [
+      "redshift-serverless:Get*",
+      "redshift-serverless:List*",
+      "ec2:Describe*",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "ReadProjectRoles"
+    actions = [
+      "iam:GetRole",
+      "iam:GetRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+    ]
+    resources = [local.project_roles]
+  }
 }
 
 resource "aws_iam_role_policy" "plan" {
@@ -142,7 +167,7 @@ resource "aws_iam_role_policy" "plan" {
 
 resource "aws_iam_role" "deploy" {
   name                 = "github-actions-${var.project}-deploy"
-  description          = "GitHub Actions: terraform apply/destroy of base/ and data/, in an approved environment"
+  description          = "GitHub Actions: terraform apply/destroy of base/ and data/, from main"
   assume_role_policy   = data.aws_iam_policy_document.trust["deploy"].json
   max_session_duration = 3600
 }
@@ -182,8 +207,89 @@ data "aws_iam_policy_document" "deploy" {
     actions   = ["ssm:DescribeParameters"]
     resources = ["*"]
   }
-  # Phase 4 adds Redshift Serverless and IAM roles named
-  # va-facilities-report-* here.
+  statement {
+    # Namespace, workgroup and usage limit. Not limitable by name (ARNs
+    # contain generated ids), so this also covers other Redshift Serverless
+    # resources in the account; acceptable for a single-project sandbox
+    # account, and documented in infrastructure/README.md.
+    sid       = "RedshiftServerless"
+    actions   = ["redshift-serverless:*"]
+    resources = ["*"]
+  }
+  statement {
+    # bootstrap.sh: SQL through the Data API, as the namespace superuser.
+    sid = "RedshiftDataApi"
+    actions = [
+      "redshift-data:ExecuteStatement",
+      "redshift-data:BatchExecuteStatement",
+      "redshift-data:DescribeStatement",
+      "redshift-data:GetStatementResult",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    # Looker Studio security group, and the network reads Redshift needs
+    # (destroy also needs ec2:DescribeNetworkInterfaces: lesson from the
+    # previous project).
+    sid = "Network"
+    actions = [
+      "ec2:Describe*",
+      "ec2:CreateSecurityGroup",
+      "ec2:DeleteSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:ModifySecurityGroupRules",
+      "ec2:UpdateSecurityGroupRuleDescriptionsIngress",
+      "ec2:CreateTags",
+      "ec2:DeleteTags",
+    ]
+    resources = ["*"]
+  }
+  statement {
+    # Roles named va-facilities-report-* only (see local.project_roles).
+    sid = "ProjectRoles"
+    actions = [
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:GetRole",
+      "iam:UpdateRole",
+      "iam:UpdateAssumeRolePolicy",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:PutRolePolicy",
+      "iam:GetRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+    ]
+    resources = [local.project_roles]
+  }
+  statement {
+    # Attaching the COPY role to the namespace "passes" it to Redshift.
+    sid       = "PassProjectRolesToRedshift"
+    actions   = ["iam:PassRole"]
+    resources = [local.project_roles]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["redshift.amazonaws.com", "redshift-serverless.amazonaws.com"]
+    }
+  }
+  statement {
+    # Redshift's service-linked role (manages the endpoint's network
+    # interfaces); created by AWS on first use, if it does not exist yet.
+    sid       = "RedshiftServiceLinkedRole"
+    actions   = ["iam:CreateServiceLinkedRole"]
+    resources = ["*"]
+    condition {
+      test     = "StringLike"
+      variable = "iam:AWSServiceName"
+      values   = ["redshift.amazonaws.com", "redshift-serverless.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "deploy" {

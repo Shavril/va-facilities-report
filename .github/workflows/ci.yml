@@ -1,4 +1,4 @@
-name: ci
+name: "CI: lint and test"
 
 # Code checks on every push and pull request. Needs no AWS access.
 on:

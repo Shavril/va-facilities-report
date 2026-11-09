@@ -1,12 +1,13 @@
-name: teardown
+name: "AWS: teardown (destroy)"
 
 # Manual only. Two options:
-# - costs: destroys data/ (S3 data lake, later Redshift): everything that
-#          costs money
-# - full:  destroys data/ and base/ (API key parameter): the whole project
+# - costs: destroys data/ (S3 data lake, Redshift Serverless): everything
+#          that costs money
+# - full:  destroys data/ and base/ (API key parameter) and the Looker
+#          password parameter: the whole project
 #
 # github-access/ (the roles this workflow logs in with) and the Terraform
-# state bucket always stay, so the `terraform` workflow ("Run workflow")
+# state bucket always stay, so "AWS: plan / deploy" ("Run workflow")
 # can rebuild everything afterwards.
 #
 # Before anything is destroyed, the data lake is downloaded and attached to
@@ -108,3 +109,17 @@ jobs:
       - name: Destroy base/ (API key parameter)
         if: inputs.scope == 'full'
         run: terraform -chdir=infrastructure/base destroy -input=false -auto-approve
+
+      # Not a Terraform resource (bootstrap.sh creates it, outside state, so
+      # the password never enters Terraform state). Kept by "costs" so Looker
+      # Studio keeps working after a rebuild; removed by "full".
+      - name: Delete the Looker password parameter
+        if: inputs.scope == 'full'
+        run: |
+          name=/va-facilities-report/redshift/looker-reader-password
+          if aws ssm get-parameter --name "$name" > /dev/null 2>&1; then
+            aws ssm delete-parameter --name "$name"
+            echo "Deleted $name"
+          else
+            echo "$name does not exist; nothing to delete"
+          fi
