@@ -1,0 +1,2 @@
+# Shell scripts run on Linux (GitHub Actions): always LF, even on Windows.
+*.sh text eol=lf

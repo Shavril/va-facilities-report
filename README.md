@@ -31,7 +31,7 @@ satisfaction and operating status, and track how this changes over time.
 | 1. API exploration | ✅ Done: see [docs/api/README.md](docs/api/README.md) |
 | 2. Python ingestion | ✅ Extract + process pipeline |
 | 3. S3 data lake | ✅ Bucket + API key in SSM (Terraform, applied via GitHub Actions); pipeline reads/writes S3. Runs from a laptop, no scheduled cloud job yet |
-| 4. Redshift warehouse | Planned |
+| 4. Redshift warehouse | In progress: infrastructure defined |
 | 5. Looker Studio reporting | Planned |
 | 6. Production readiness | Planned |
 
@@ -239,12 +239,41 @@ including why each decision was made: [infrastructure/README.md](infrastructure/
 |---|---|---|---|---|
 | `github-access/` | IAM roles GitHub Actions logs in with (OIDC, no stored keys) | no | no | no |
 | `base/` | SSM parameter `/va-facilities-report/sandbox/api-key` | no | no | yes |
-| `data/` | S3 data lake `va-facilities-report-<account-id>` (Phase 4: Redshift) | yes | yes | yes |
+| `data/` | S3 data lake `va-facilities-report-<account-id>`, Redshift Serverless (namespace and workgroup `va-facilities-report`), the IAM role Redshift reads S3 with, the Looker Studio security group | yes | yes | yes |
 
 The data lake bucket blocks all public access, has ACLs disabled, is
 encrypted at rest (SSE-S3), rejects non-HTTPS requests, and cleans up
 incomplete uploads after 7 days. Nothing else expires: raw snapshots are
 the history.
+
+**Redshift Serverless** (base capacity 4 RPU, the minimum) has no admin
+password: the pipeline logs in with IAM through the **Redshift Data API**,
+an HTTPS AWS API that needs no network path into the warehouse. Redshift
+reads Parquet from S3 (`COPY`) with its own IAM role, limited to reading
+`processed/`. A usage limit stops queries after 30 RPU-hours in a month
+(about $11), as a guardrail against runaway cost.
+
+**Looker Studio is the one exception to "nothing public".** Its native
+Redshift connector needs a public hostname; it supports no Data API, SSH
+tunnel or private connection. So the workgroup is publicly accessible, but
+a dedicated security group only lets in Google's published Looker Studio
+address range (`142.251.74.0/23`) on port 5439, SSL is required, and Looker
+logs in as `looker_reader`, a password user that can only read the
+`reporting` schema. Everything else uses the Data API, never this path.
+When the project is finished, the dashboard switches to Looker Studio data
+extracts and the AWS infrastructure is torn down.
+
+**Database setup Terraform cannot do** (users, schemas, grants) is in
+[`infrastructure/data/bootstrap.sh`](infrastructure/data/bootstrap.sh). The
+identity that creates a Redshift Serverless namespace becomes its
+superuser: here the GitHub deploy role. After each apply, the workflow runs
+the script as that role: it creates the pipeline's database user
+(`IAM:pipeline-va-facilities-report`, IAM login only) as the owner of the
+schemas `staging`, `core` and `reporting`, and the `looker_reader` user.
+The Looker password is generated once and kept only in SSM
+(`/va-facilities-report/redshift/looker-reader-password`); Redshift receives
+an MD5 hash of it, so the password never appears in SQL, query history or
+Terraform state.
 
 **The API key never enters Terraform state.** Terraform creates the
 parameter through a write-only argument (`value_wo`) holding a placeholder;
@@ -264,20 +293,31 @@ delete the record of what exists.
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `ci` | every push and pull request | Ruff, pytest, `terraform fmt` and `validate` (no AWS access) |
-| `terraform` | pull request changing `infrastructure/` | `terraform plan` for `base/` and `data/` with a read-only role, shown in the job summary |
-| `terraform` | push to `main` changing `infrastructure/`, or manual "Run workflow" (rebuild) | `terraform apply` for `base/` then `data/`, then writes the API key from a GitHub secret into SSM if the parameter holds the placeholder |
-| `teardown` | manual, scope `costs` or `full` + typed confirmation | backs up the data lake as a run artifact, then destroys `data/` (and `base/` for `full`) |
+| AWS: plan / deploy | pull request changing `infrastructure/` | `terraform plan` for `base/` and `data/` with a read-only role, shown in the job summary |
+| AWS: plan / deploy | push to `main` changing `infrastructure/`, or manual "Run workflow" (rebuild) | `terraform apply` for `base/` then `data/`, then writes the API key from a GitHub secret into SSM if the parameter holds the placeholder, then runs `bootstrap.sh` (Redshift users, schemas, grants) |
+| AWS: teardown (destroy) | manual, scope `costs` or `full` + typed confirmation | backs up the data lake as a run artifact, then destroys `data/` (and for `full`: `base/` and the Looker password parameter) |
 
 Every job that changes AWS runs in the GitHub environment `aws`, which only
 `main` can deploy to (no manual approval). The deploy role trusts only jobs in that environment;
 pull requests get the read-only plan role. `github-access/` is applied by
 hand and no workflow can modify it, so after a full teardown the
-`terraform` workflow can rebuild everything from GitHub.
+"AWS: plan / deploy" workflow can rebuild everything from GitHub.
 
 ### Costs
 
-Expected cost: well under $1/month.
+Expected cost while the infrastructure exists: about $5–8/month, almost
+all of it Redshift. After a teardown: $0 (the state bucket holds a few KB).
 
+- **Redshift Serverless compute:** $0.375 per RPU-hour in us-east-1, billed
+  per second while queries run, 60-second minimum, nothing while idle
+  ([pricing](https://aws.amazon.com/redshift/pricing/), checked
+  2026-11-09). At 4 RPU, a few minutes of loading and model building a day
+  plus dashboard queries come to roughly $2–5/month. Capped by the 30
+  RPU-hour monthly usage limit.
+- **Redshift managed storage:** $0.024 per GB-month; a few MB here.
+- **Public IPv4 address** (the Looker Studio endpoint): $0.005/hour, idle
+  or not, about $3.70/month
+  ([pricing](https://aws.amazon.com/vpc/pricing/), checked 2026-11-09).
 - **S3 Standard:** one full health snapshot is about 22 MB raw + 0.25 MB
   processed. Running daily adds roughly 8 GB a year. At S3 Standard's rate
   of roughly $0.02 per GB-month in us-east-1 (check the
@@ -288,19 +328,21 @@ Expected cost: well under $1/month.
   API calls have no additional charge
   ([pricing](https://aws.amazon.com/systems-manager/pricing/), checked
   2026-11-07).
-- No compute runs in AWS yet; the pipeline runs on a laptop.
+- The pipeline itself runs on a laptop; no other compute runs in AWS.
 
 ### Tearing it down
 
-Use the `teardown` workflow (Actions → teardown → Run workflow):
+Use the "AWS: teardown (destroy)" workflow (Actions → AWS: teardown (destroy) → Run workflow):
 
-- **costs**: type `destroy costs`. Removes the data lake (and later
-  Redshift).
-- **full**: type `destroy full`. Also removes the API key parameter.
+- **costs**: type `destroy costs`. Removes the data lake and Redshift. The
+  Looker password stays in SSM, so after a rebuild Looker Studio connects
+  with the same credentials (only the warehouse must be reloaded from S3).
+- **full**: type `destroy full`. Also removes the API key parameter and the
+  Looker password.
 
 Both download the data lake first and attach it to the run as the artifact
 `data-lake-backup`: **download it to your laptop from the run page**. GitHub
-deletes artifacts after 90 days. Rebuild with the `terraform` workflow
+deletes artifacts after 90 days. Rebuild with the "AWS: plan / deploy" workflow
 ("Run workflow").
 
 What always stays: `github-access/` (two IAM roles, free) and the state
